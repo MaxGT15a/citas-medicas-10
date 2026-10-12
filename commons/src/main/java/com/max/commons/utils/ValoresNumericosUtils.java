@@ -1,6 +1,6 @@
 package com.max.commons.utils;
 
-import com.max.escuela.exceptions.DatoInvalidoException;
+import com.max.commons.exceptions.DatoInvalidoException;
 
 import java.math.BigDecimal;
 
@@ -20,6 +20,12 @@ public class ValoresNumericosUtils {
     public static void validarBigDecimalPositvo(BigDecimal numero, String mensaje){
         validarNumeroRequerido(numero, mensaje);
         if (numero.compareTo(BigDecimal.ZERO) <= 0)
+            throw new DatoInvalidoException(mensaje);
+    }
+
+    public static void validarRangoShort(short numero, int min, int max, String mensaje){
+        validarNumeroRequerido(numero, mensaje);
+        if (numero < min || numero > max)
             throw new DatoInvalidoException(mensaje);
     }
 
