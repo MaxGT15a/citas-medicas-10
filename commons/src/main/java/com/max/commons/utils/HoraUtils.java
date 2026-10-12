@@ -1,6 +1,6 @@
 package com.max.commons.utils;
 
-import com.max.escuela.exceptions.DatoInvalidoException;
+import com.max.commons.exceptions.DatoInvalidoException;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;

@@ -9,14 +9,8 @@ public record MedicoResponse(
         @Schema(description = "ID del medico", example = "1")
         Long id,
 
-        @Schema(description = "Nombre del medico", example = "Mauricio")
+        @Schema(description = "Nombre completo del medico", example = "Mauricio García Ramírez")
         String nombre,
-
-        @Schema(description = "El apellido paterno del medico", example = "García")
-        String apellidoPaterno,
-
-        @Schema(description = "El apellido materno del medico", example = "Ramírez")
-        String apellidoMaterno,
 
         @Schema(description = "La edad del medico", example = "20")
         Short edad,
@@ -30,7 +24,13 @@ public record MedicoResponse(
         @Schema(description = "La cedula profesional del medico", example = "123456789012")
         String cedulaProfesional,
 
-        @Schema(description = "La especialidad del médico", example = "5", minimum = "1")
-        Long idEspecialidad
+        @Schema(description = "La especialidad del médico", example = "Cardiología")
+        String especialidad,
+
+        @Schema(description = "La disponibilidad del médico", example = "ACTIVO", minimum = "1")
+        String disponibilidad,
+
+        @Schema(description = "El id de la disponibilidad del médico", example = "1")
+        Long idDisponibilidad
 ) {
 }
