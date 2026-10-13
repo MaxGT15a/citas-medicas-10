@@ -62,4 +62,10 @@ public class StringCustomUtils {
 
                 .trim();
     }
+
+    public static void validarTextoNumerico(String texto, String mensajeError){
+        validarNoVacioNoNull(texto, mensajeError);
+        if(!texto.trim().matches("\\d+"))
+            throw new DatoInvalidoException(mensajeError);
+    }
 }
