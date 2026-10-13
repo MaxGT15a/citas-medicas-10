@@ -124,7 +124,7 @@ public class MedicoServiceImpl implements MedicoService {
     private Medico obtenerMedicoActivoPorId(Long id) {
         log.info("Obteniendo medico activo por id: {}", id);
         return medicoRepository.findByIdAndEstadoRegistro(id, EstadoRegistro.ACTIVO)
-                .orElseThrow(() -> new RuntimeException("Medico no encontrado con id: " + id));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Medico no encontrado con id: " + id));
     }
 
     private void validarDatosUnicos(MedicoRequest request){

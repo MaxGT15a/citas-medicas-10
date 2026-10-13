@@ -1,5 +1,6 @@
 package com.max.commons.exceptions;
 
+import feign.RetryableException;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
@@ -94,6 +95,14 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return pd;
     }
 
+    // 503: el servicio remoto está caído no responde
+    @ExceptionHandler({ServicioNoDisponibleException.class, RetryableException.class})
+    public ProblemDetail handleServicioNoDisponible(Exception e) {
+        log.error("Servicio remoto no disponible", e);
+        return ProblemDetail.forStatusAndDetail(HttpStatus.SERVICE_UNAVAILABLE,
+                "Un servicio remoto no responde. Intente más tarde");
+    }
+
     // ---------- Red de seguridad ----------
 
     // 500: cualquier error que no previmos
@@ -103,4 +112,5 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR,
                 "Error interno del servidor. Contacte al administrador.");
     }
+
 }
