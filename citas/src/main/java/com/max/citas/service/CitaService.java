@@ -6,5 +6,9 @@ import com.max.commons.service.CrudService;
 
 public interface CitaService extends CrudService<CitaRequest, CitaResponse> {
 
-    void actualizarEstadoCita(Long idCita, Long idEstadoCita);
+    void actualizarEstadoCita(Long id, Long idEstado);
+
+    void pacienteTieneCitaActiva(Long idPaciente);
+
+    void medicoTieneCitaActiva(Long idMedico);
 }

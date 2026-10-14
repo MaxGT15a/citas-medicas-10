@@ -1,14 +1,17 @@
 package com.max.pacientes.service.paciente;
 
 
+import com.max.commons.clients.CitaClient;
 import com.max.commons.dto.pacientes.PacienteRequest;
 import com.max.commons.dto.pacientes.PacienteResponse;
 import com.max.commons.enums.EstadoRegistro;
+import com.max.commons.exceptions.ConflictoException;
 import com.max.commons.exceptions.RecursoNoEncontradoException;
 import com.max.pacientes.entity.Paciente;
 import com.max.pacientes.mapper.PacienteMapper;
 import com.max.pacientes.repository.PacienteRepository;
 import com.max.pacientes.utils.ServiceUtils;
+import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -23,6 +26,8 @@ import java.util.List;
 public class PacienteServiceImpl implements PacienteService{
     private final PacienteRepository pacienteRepository;
     private final PacienteMapper pacienteMapper;
+
+    private final CitaClient citaClient;
 
     @Override
     @Transactional(readOnly = true)
@@ -39,16 +44,15 @@ public class PacienteServiceImpl implements PacienteService{
     }
 
     @Override
-    public PacienteResponse obtenerPacientePorId(Long id) {
+    public PacienteResponse obtenerPorIdSinEstado(Long id) {
         return pacienteMapper.entidadAResponse(obtenerPaciente(id));
     }
 
     @Override
     public PacienteResponse registrar(PacienteRequest request) {
-        Paciente paciente = pacienteMapper.requestAEntidad(
-                request,
-                EstadoRegistro.obtenerPorDescripcion(request.estadoRegistro())
-        );
+        validarRegistroUnico(request);
+
+        Paciente paciente = pacienteMapper.requestAEntidad(request);
 
         pacienteRepository.saveAndFlush(paciente);
 
@@ -59,12 +63,13 @@ public class PacienteServiceImpl implements PacienteService{
 
     @Override
     public PacienteResponse actualizar(PacienteRequest request, Long id) {
-        Paciente paciente = obtenerPaciente(id);
-        EstadoRegistro estadoRegistro = EstadoRegistro.obtenerPorDescripcion(
-                request.estadoRegistro()
-        );
+        validarActualizarUnico(request, id);
 
-        if(paciente.cambiosEnDatos(
+        Paciente paciente = obtenerPacienteActivo(id);
+
+        validarPacienteEliminableOActualizable(id);
+
+        paciente.actualizar(
                 request.nombre(),
                 request.apellidoPaterno(),
                 request.apellidoMaterno(),
@@ -73,38 +78,35 @@ public class PacienteServiceImpl implements PacienteService{
                 request.estatura(),
                 request.email(),
                 request.telefono(),
-                request.direccion(),
-                estadoRegistro
-        )){
-            paciente.actualizar(
-                    request.nombre(),
-                    request.apellidoPaterno(),
-                    request.apellidoMaterno(),
-                    request.edad(),
-                    request.peso(),
-                    request.estatura(),
-                    request.email(),
-                    request.telefono(),
-                    request.direccion(),
-                    estadoRegistro
-            );
-            pacienteRepository.saveAndFlush(paciente);
+                request.direccion()
+        );
+        pacienteRepository.saveAndFlush(paciente);
 
-            log.info("Paciente actualizado con id: {}", id);
-        }
+        log.info("Paciente actualizado con id: {}", id);
+
 
         return pacienteMapper.entidadAResponse(paciente);
     }
 
     @Override
     public void eliminar(Long id) {
-        Paciente paciente = obtenerPaciente(id);
+        Paciente paciente = obtenerPacienteActivo(id);
 
-        paciente.actualizarEstadoRegistro(EstadoRegistro.ELIMINADO);
+        validarPacienteEliminableOActualizable(id);
+
+        paciente.eliminar();
 
         pacienteRepository.saveAndFlush(paciente);
 
         log.info("Paciente eliminado con id:{}", id);
+    }
+
+    private void validarPacienteEliminableOActualizable(Long id){
+        try {
+            citaClient.pacienteTieneCitaActiva(id);
+        } catch (FeignException.Conflict e){
+            throw new ConflictoException("El paciente con id: " + id + " tiene citas activas y no puede ser eliminado o actualizado");
+        }
     }
 
     private Paciente obtenerPaciente(Long id){
@@ -116,6 +118,7 @@ public class PacienteServiceImpl implements PacienteService{
     }
 
     private Paciente obtenerPacienteActivo(Long id){
+        log.info("Obteniendo paciente activo con id: {}", id);
         return pacienteRepository.findByIdAndEstadoRegistro(
                 id, EstadoRegistro.ACTIVO
         ).orElseThrow(() ->
@@ -123,5 +126,24 @@ public class PacienteServiceImpl implements PacienteService{
                         "Paciente no encontrado con id: " + id
                 )
         );
+    }
+
+    private void validarRegistroUnico(PacienteRequest request){
+        if(pacienteRepository.existsByEmailIgnoreCaseOrTelefonoAndEstadoRegistro(
+                request.email().toLowerCase(),
+                request.telefono(),
+                EstadoRegistro.ACTIVO
+        ))
+            throw new ConflictoException("Ya existe un paciente registrado con el mismo correo electrónico y número de teléfono");
+    }
+
+    private void validarActualizarUnico(PacienteRequest request, Long id){
+        if(pacienteRepository.existsByEmailIgnoreCaseOrTelefonoAndEstadoRegistroAndIdNot(
+                request.email().toLowerCase(),
+                request.telefono(),
+                EstadoRegistro.ACTIVO,
+                id
+        ))
+            throw new ConflictoException("Ya existe un paciente con el mismo correo electrónico y número de teléfono");
     }
 }

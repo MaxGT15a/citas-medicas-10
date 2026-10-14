@@ -80,7 +80,7 @@ public class Cita {
             );
     }
 
-    private void validarActualizacionPermitida(){
+    public void validarActualizacionPermitida(){
 
         validarNoEliminada();
 

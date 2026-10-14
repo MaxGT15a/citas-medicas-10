@@ -6,5 +6,5 @@ import com.max.commons.dto.pacientes.PacienteResponse;
 import com.max.commons.service.CrudService;
 
 public interface PacienteService extends CrudService<PacienteRequest, PacienteResponse> {
-    PacienteResponse obtenerPacientePorId(Long id);
+    PacienteResponse obtenerPorIdSinEstado(Long id);
 }

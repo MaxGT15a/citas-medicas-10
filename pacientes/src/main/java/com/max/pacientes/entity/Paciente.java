@@ -1,21 +1,19 @@
 package com.max.pacientes.entity;
 
 import com.max.commons.enums.EstadoRegistro;
+import com.max.commons.exceptions.ConflictoException;
 import com.max.commons.exceptions.DatoInvalidoException;
 import com.max.commons.utils.StringCustomUtils;
 import com.max.commons.utils.ValoresNumericosUtils;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(name = "PACIENTES")
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 @Builder
 @Getter
 public class Paciente {
@@ -73,7 +71,6 @@ public class Paciente {
             String telefono,
             String direccion
     ){
-        // Nombre, Apellido Paterno y Apellido Materno
         StringCustomUtils.validarTamanio(
                 nombre, 1, 50,
                 "El nombre es requerido y debe tener entre 5 y 50 caracteres"
@@ -87,7 +84,6 @@ public class Paciente {
                 "El apellido materno es requerido y debe tener entre 5 y 50 caracteres"
         );
 
-        // Validar edad
         ValoresNumericosUtils.validarPositivo(
                 edad,
                 "La edad es requerida y debe ser positiva"
@@ -97,7 +93,6 @@ public class Paciente {
                 "La edad es requerida y debe estar entre 1 y 100 años"
         );
 
-        // Validar peso
         ValoresNumericosUtils.validarPositivo(
                 peso,
                 "El peso es requerido y debe ser positiva"
@@ -107,7 +102,6 @@ public class Paciente {
                 "El peso es requerido y debe estar entre 0.1 y 200 kg"
         );
 
-        // Validar estatura
         ValoresNumericosUtils.validarPositivo(
                 estatura,
                 "La estatura es requerida y debe ser positiva"
@@ -124,7 +118,7 @@ public class Paciente {
 
         StringCustomUtils.validarTextoNumerico(
                 telefono,
-                "El telefono es requerido y debe contener solo numeros"
+                "El telefonio es requerido y debe contener solo numeros"
         );
 
         StringCustomUtils.validarTamanio(
@@ -132,6 +126,8 @@ public class Paciente {
                 "La direccion es requerida y debe tener entre 20 y 150 caracteres"
         );
     }
+
+
 
     public boolean cambiosEnDatos(
             String nombre,
@@ -142,30 +138,32 @@ public class Paciente {
             Double estatura,
             String email,
             String telefono,
-            String direccion,
-            EstadoRegistro estadoRegistro
+            String direccion
     ){
         validarDatos(
-                nombre,
-                apellidoPaterno,
-                apellidoMaterno,
+                nombre.trim(),
+                apellidoPaterno.trim(),
+                apellidoMaterno.trim(),
                 edad,
                 peso,
                 estatura,
-                email,
-                telefono,
-                direccion
+                email.trim().toLowerCase(),
+                telefono.trim(),
+                direccion.trim()
         );
 
         return !this.nombre.equals(nombre.trim()) ||
-            !this.apellidoPaterno.equals(apellidoMaterno.trim()) ||
-            !this.apellidoMaterno.equals(apellidoMaterno.trim()) ||
-            this.edad != edad ||
-            this.peso != peso ||
-            this.estatura != estatura ||
-            !this.telefono.equals(telefono.trim()) ||
-            !this.direccion.equals(direccion.trim()) ||
-            !this.estadoRegistro.equals(estadoRegistro);
+                !this.apellidoPaterno.equals(apellidoMaterno.trim()) ||
+                !this.apellidoMaterno.equals(apellidoMaterno.trim()) ||
+                this.edad != edad ||
+                this.peso != peso ||
+                this.estatura != estatura ||
+                !this.telefono.equals(telefono.trim()) ||
+                !this.direccion.equals(direccion.trim());
+    }
+
+    public String obtenerNombreCompleto(){
+        return this.nombre + " " + this.apellidoPaterno + " " + this.apellidoMaterno;
     }
 
     public void actualizar(
@@ -177,19 +175,19 @@ public class Paciente {
             Double estatura,
             String email,
             String telefono,
-            String direccion,
-            EstadoRegistro estadoRegistro
+            String direccion
     ){
+        validaNoEliminado();
         validarDatos(
-                nombre,
-                apellidoPaterno,
-                apellidoMaterno,
+                nombre.trim(),
+                apellidoPaterno.trim(),
+                apellidoMaterno.trim(),
                 edad,
                 peso,
                 estatura,
-                email,
-                telefono,
-                direccion
+                email.trim().toLowerCase(),
+                telefono.trim(),
+                direccion.trim()
         );
 
         this.nombre = nombre.trim();
@@ -203,30 +201,23 @@ public class Paciente {
         this.numExpediente = generarNumeroDeExpediente(telefono.trim());
         this.telefono = telefono.trim();
         this.direccion = direccion.trim();
-        this.estadoRegistro = estadoRegistro;
-    }
-
-    public void actualizarEstadoRegistro(EstadoRegistro estadoRegistro){
-        if(estadoRegistro == null)
-            throw new DatoInvalidoException("El estado de registro no puede ser nulo");
-
-        this.estadoRegistro = estadoRegistro;
     }
 
     private static String generarNumeroDeExpediente(String telefono){
-        // Número de expediente: se genera a partir del teléfono.
-        // Según el ejemplo del anexo, cada dígito del teléfono va
-        // seguido de una X (5512345678 → 5X5X1X2X3X4X5X6X7X8X).
         return telefono.chars()
                 .mapToObj(c -> (char) c + "X")
                 .reduce("", String::concat);
     }
 
-    public void asignarEstadoRegistro(EstadoRegistro estadoRegistro){
-        if (estadoRegistro == null)
-            throw new DatoInvalidoException("El estado de registro no puede ser nulo");
+    private void validaNoEliminado(){
+        if (this.estadoRegistro.equals(EstadoRegistro.ELIMINADO))
+            throw new ConflictoException("El paciente ya se encuentra eliminado");
+    }
 
-        this.estadoRegistro = estadoRegistro;
+    public void eliminar(){
+        validaNoEliminado();
+
+        this.estadoRegistro = EstadoRegistro.ELIMINADO;
     }
 
     public static Paciente crear(
@@ -241,28 +232,29 @@ public class Paciente {
             String direccion
     ){
         validarDatos(
-                nombre,
-                apellidoPaterno,
-                apellidoMaterno,
+                nombre.trim(),
+                apellidoPaterno.trim(),
+                apellidoMaterno.trim(),
                 edad,
                 peso,
                 estatura,
-                email,
-                telefono,
-                direccion
+                email.trim().toLowerCase(),
+                telefono.trim(),
+                direccion.trim()
         );
         return Paciente.builder()
-                .nombre(nombre)
-                .apellidoPaterno(apellidoPaterno)
-                .apellidoMaterno(apellidoMaterno)
+                .nombre(nombre.trim())
+                .apellidoPaterno(apellidoPaterno.trim())
+                .apellidoMaterno(apellidoMaterno.trim())
                 .edad(edad)
                 .peso(peso)
                 .estatura(estatura)
                 .imc(peso / (estatura * estatura))
-                .email(email)
+                .email(email.trim().toLowerCase())
                 .numExpediente(generarNumeroDeExpediente(telefono.trim()))
-                .telefono(telefono)
-                .direccion(direccion)
+                .telefono(telefono.trim())
+                .direccion(direccion.trim())
+                .estadoRegistro(EstadoRegistro.ACTIVO)
                 .build();
 
     }
