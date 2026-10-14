@@ -1,15 +1,18 @@
 package com.max.medicos.service;
 
+import com.max.commons.clients.CitaClient;
 import com.max.commons.dto.medicos.MedicoRequest;
 import com.max.commons.dto.medicos.MedicoResponse;
 import com.max.commons.enums.DisponibilidadMedico;
 import com.max.commons.enums.EspecialidadMedico;
 import com.max.commons.enums.EstadoRegistro;
+import com.max.commons.exceptions.ConflictoException;
 import com.max.commons.exceptions.DatoInvalidoException;
 import com.max.commons.exceptions.RecursoNoEncontradoException;
 import com.max.medicos.entity.Medico;
 import com.max.medicos.mapper.MedicoMapper;
 import com.max.medicos.repository.MedicoRepository;
+import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -26,6 +29,8 @@ public class MedicoServiceImpl implements MedicoService {
     private final MedicoRepository medicoRepository;
 
     private final MedicoMapper medicoMapper;
+
+    private final CitaClient citaClient;
 
     @Override
     @Transactional(readOnly = true)
@@ -67,6 +72,8 @@ public class MedicoServiceImpl implements MedicoService {
     @Override
     public MedicoResponse actualizar(MedicoRequest request, Long id) {
         Medico medico = obtenerMedicoActivoPorId(id);
+
+        validarMedicoEliminableOActualizable(id);
 
         validarCambiosUnicos(request, id);
 
@@ -111,6 +118,8 @@ public class MedicoServiceImpl implements MedicoService {
     @Override
     public void eliminar(Long id) {
         Medico medico = obtenerMedicoActivoPorId(id);
+
+        validarMedicoEliminableOActualizable(id);
 
         log.info("Eliminando medico: {}", medico);
 
@@ -169,5 +178,13 @@ public class MedicoServiceImpl implements MedicoService {
                 request.cedulaProfesional(), EstadoRegistro.ACTIVO, id))
             throw new DatoInvalidoException("Ya existe un medico activo con la misma cédula profesional: "
                     + request.cedulaProfesional());
+    }
+
+    private void validarMedicoEliminableOActualizable(Long id){
+        try {
+            citaClient.medicoTieneCitaActiva(id);
+        } catch (FeignException.Conflict e){
+            throw new ConflictoException("El medico con id: " + id + " tiene citas activas y no puede ser eliminado o actualizado");
+        }
     }
 }

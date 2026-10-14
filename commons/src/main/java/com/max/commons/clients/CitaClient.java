@@ -11,4 +11,6 @@ public interface CitaClient {
     @GetMapping("/paciente-cita/{idPaciente}")
     ResponseEntity<Void> pacienteTieneCitaActiva(@PathVariable Long idPaciente);
 
+    @GetMapping("/medico-cita/{idMedico}")
+    ResponseEntity<Void> medicoTieneCitaActiva(@PathVariable Long idMedico);
 }

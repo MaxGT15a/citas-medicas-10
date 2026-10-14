@@ -63,11 +63,12 @@ public class PacienteServiceImpl implements PacienteService{
 
     @Override
     public PacienteResponse actualizar(PacienteRequest request, Long id) {
-        validarActualizarUnico(request, id);
 
         Paciente paciente = obtenerPacienteActivo(id);
 
         validarPacienteEliminableOActualizable(id);
+
+        validarActualizarUnico(request, id);
 
         paciente.actualizar(
                 request.nombre(),
