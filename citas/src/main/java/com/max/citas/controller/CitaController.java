@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@Tag(name = "API Citas", description = "Operaciones relacionadas con las citas")
+@Tag(name = "API Citas", description = "Operações relacionadas a compromissos")
 public class CitaController extends CrudController<CitaRequest, CitaResponse, CitaService> {
     public CitaController(CitaService service) {
         super(service);
@@ -28,11 +28,7 @@ public class CitaController extends CrudController<CitaRequest, CitaResponse, Ci
     @ApiResponse(responseCode = "204", description = "Estado de la cita actualizado")
     @ApiResponse(responseCode = "409", description = "El estado de la cita no puede ser actualizado por regla de negocio",
             content = @Content(mediaType = "application/problem+json",
-                    schema = @Schema(
-                            implementation = ProblemaDoc.class
-                    )
-            )
-
+                    schema = @Schema(implementation = ProblemaDoc.class))
     )
     public ResponseEntity<Void> actualizarEstadoCita(
             @PathVariable @Positive(message = "El idCita debe ser positivo") Long idCita,
@@ -44,13 +40,9 @@ public class CitaController extends CrudController<CitaRequest, CitaResponse, Ci
 
     @GetMapping("/paciente-cita/{idPaciente}")
     @ApiResponse(responseCode = "204", description = "El paciente no tiene citas activas")
-    @ApiResponse(responseCode = "409", description = "El paciente tiene una cita activa y no puede agendar otra",
+    @ApiResponse(responseCode = "409", description = "El paciente ya tiene una cita activa",
             content = @Content(mediaType = "application/problem+json",
-                    schema = @Schema(
-                            implementation = ProblemaDoc.class
-                    )
-            )
-
+                    schema = @Schema(implementation = ProblemaDoc.class))
     )
     public ResponseEntity<Void> pacienteTieneCitaActiva(
             @PathVariable @Positive(message = "El idPaciente debe ser positivo") Long idPaciente
@@ -63,11 +55,7 @@ public class CitaController extends CrudController<CitaRequest, CitaResponse, Ci
     @ApiResponse(responseCode = "204", description = "El medico no tiene citas activas")
     @ApiResponse(responseCode = "409", description = "El medico tiene una cita activa y no puede agendar otra",
             content = @Content(mediaType = "application/problem+json",
-                    schema = @Schema(
-                            implementation = ProblemaDoc.class
-                    )
-            )
-
+                    schema = @Schema(implementation = ProblemaDoc.class))
     )
     public ResponseEntity<Void> medicoTieneCitaActiva(
             @PathVariable @Positive(message = "El idMedico debe ser positivo") Long idMedico

@@ -15,11 +15,6 @@ public interface MedicoClient {
     @GetMapping("/{id}")
     ResponseEntity<MedicoResponse> obtenerMedicoPorId(@PathVariable Long id);
 
-    @PutMapping("/{idMedico}/disponibilidad/{idDisponibilidad}")
-    void actualizarDisponibilidadMedico(
-            @PathVariable Long idMedico,
-            @PathVariable Long idDisponibilidad
-    );
     @PutMapping("/interno/{idMedico}/disponibilidad/{idDisponibilidad}")
     void actualizarDisponibilidadMedicoPorCita(
             @PathVariable Long idMedico,
