@@ -24,29 +24,21 @@ public class PacienteMapper implements CommonMapper<PacienteRequest, PacienteRes
                 request.direccion()
         );
     }
-    public Paciente requestAEntidad(PacienteRequest request, EstadoRegistro estadoRegistro) {
-        Paciente paciente = requestAEntidad(request);
-        paciente.asignarEstadoRegistro(estadoRegistro);
-        return paciente;
-    }
 
     @Override
     public PacienteResponse entidadAResponse(Paciente paciente) {
         return paciente == null ? null
                 : new PacienteResponse(
-                        paciente.getId(),
-                        paciente.getNombre(),
-                        paciente.getApellidoPaterno(),
-                        paciente.getApellidoMaterno(),
-                        paciente.getEdad(),
-                        paciente.getPeso(),
-                        paciente.getEstatura(),
-                        paciente.getImc(),
-                        paciente.getEmail(),
-                        paciente.getNumExpediente(),
-                        paciente.getTelefono(),
-                        paciente.getDireccion(),
-                        paciente.getEstadoRegistro().getDescripcion()
+                paciente.getId(),
+                paciente.obtenerNombreCompleto(),
+                paciente.getEdad(),
+                paciente.getPeso(),
+                paciente.getEstatura(),
+                paciente.getImc(),
+                paciente.getEmail(),
+                paciente.getTelefono(),
+                paciente.getDireccion(),
+                paciente.getNumExpediente()
         );
     }
 }
